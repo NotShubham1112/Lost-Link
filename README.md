@@ -26,21 +26,21 @@
 # 👨‍💻 Developed by **Shubham Kambli**
 ### *The Architect behind the Mesh*
 
-**Founder of [COSMIC](https://notshubham111.dev) • AI Engineer • Open-Source Visionary**
+**Founder of [COSMIC](https://shubham-plum.vercel.app) • AI Engineer • Open-Source Builder**
 
 ---
 
-> "I build high-performance systems that bridge the gap between theoretical AI and production-ready reality. 19-year-old founder, engineer, and builder creating tools for the future of decentralized computing."
+> "I build high-performance systems that bridge the gap between artificial intelligence and software engineering. 19-year-old founder, engineer, and builder creating production-ready tools for the future of decentralized computing."
 
-<br>
+### 🤝 **Let's Connect & Build**
 
-| 🌐 **Ecosystem** | 📧 **Direct** | 💼 **Professional** | 🐦 **Social** | 👾 **Community** |
+| 🌐 **Website** | 📧 **Email** | 💼 **LinkedIn** | 🐦 **Twitter** | 👾 **Discord** |
 |:---:|:---:|:---:|:---:|:---:|
-| [**Portfolio**](https://portfolio.notshubham111.dev) | [**Email**](mailto:shubhamkambli1112@gmail.com) | [**LinkedIn**](https://linkedin.com/in/shubham-kambli-720650339) | [**Twitter**](https://twitter.com/Not_Shubham_111) | [**Discord**](https://discord.gg/XA3ctdYZ) |
+| [**shubham-plum.vercel.app**](https://shubham-plum.vercel.app) | [**shubhamkambli1112@gmail.com**](mailto:shubhamkambli1112@gmail.com) | [**LinkedIn Profile**](https://linkedin.com/in/shubham-kambli-720650339) | [**@Not_Shubham_111**](https://twitter.com/Not_Shubham_111) | [**Discord Community**](https://discord.gg/XA3ctdYZ) |
 
 <br>
 
-**[🏠 Explore the Wiki](https://github.com/NotShubham111/Lost-Link/wiki) • [📖 Full Case Study](https://portfolio.notshubham111.dev)**
+**[🚀 Wiki Home](https://github.com/NotShubham111/Lost-Link/wiki) • [🔍 View Full Portfolio](https://shubham-plum.vercel.app)**
 
 </div>
 
