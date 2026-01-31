@@ -28,6 +28,11 @@ export class P2PService {
     private selfPeerId: string = crypto.randomBytes(8).toString('hex')
     private selfDisplayName: string = 'User-' + this.selfPeerId.slice(0, 4)
     private mainWindow: BrowserWindow | null = null
+    private lobbyState = {
+        isHosting: false,
+        name: '',
+        isLocked: false
+    }
 
     constructor() {
         this.initIdentity()
@@ -72,48 +77,124 @@ export class P2PService {
         this.setupIpcHandlers()
     }
 
-    private startUdpDiscovery(): void {
-        this.udpSocket = dgram.createSocket('udp4')
-        this.udpSocket.on('message', (msg, rinfo) => {
-            try {
-                const payload = JSON.parse(msg.toString())
-                if (payload.app === 'Lost-Link') {
-                    payload._ip = rinfo.address
-                    this.mainWindow?.webContents.send('udp-peer', payload)
+    private getBroadcastAddresses(): string[] {
+        const list: string[] = []
+        try {
+            const nets = os.networkInterfaces()
+            for (const name of Object.keys(nets)) {
+                const interfaces = nets[name]
+                if (interfaces) {
+                    for (const netInterface of interfaces) {
+                        if (netInterface.family === 'IPv4' && !netInterface.internal) {
+                            // Calculate broadcast address
+                            // IP OR (NOT Netmask)
+                            const addr = netInterface.address.split('.').map(Number)
+                            const mask = netInterface.netmask.split('.').map(Number)
+                            const broadcast = addr.map((b, i) => b | (255 - mask[i])).join('.')
+                            list.push(broadcast)
+                        }
+                    }
                 }
-            } catch (e) {
-                // Ignore non-JSON or other app messages
             }
-        })
+        } catch (e) {
+            console.error('Failed to calculate broadcast addresses:', e)
+        }
+        // Always include global broadcast as fallback
+        if (!list.includes('255.255.255.255')) list.push('255.255.255.255')
+        return list
+    }
 
-        this.udpSocket.bind(BROADCAST_PORT, () => {
-            this.udpSocket?.setBroadcast(true)
-        })
+    private startUdpDiscovery(): void {
+        try {
+            this.udpSocket = dgram.createSocket({ type: 'udp4', reuseAddr: true })
+
+            this.udpSocket.on('message', (msg, rinfo) => {
+                try {
+                    const payload = JSON.parse(msg.toString())
+                    // Don't show ourselves in discovery if we are scanning locally, 
+                    // unless we want to debug. Usually helpful to see "self" if filtering properly,
+                    // but usually we filter by ID.
+                    // Let's filter by peerId if matches self
+                    if (payload.app === 'Lost-Link' && payload.peerId !== this.selfPeerId) {
+                        payload._ip = rinfo.address
+                        this.mainWindow?.webContents.send('udp-peer', payload)
+                    }
+                } catch (e) {
+                    // Ignore non-JSON or other app messages
+                }
+            })
+
+            this.udpSocket.on('error', (err) => {
+                console.error('[P2P] UDP Socket error:', err)
+            })
+
+            this.udpSocket.bind(BROADCAST_PORT, () => {
+                this.udpSocket?.setBroadcast(true)
+                console.log(`[P2P] UDP Discovery listening on port ${BROADCAST_PORT}`)
+            })
+        } catch (e) {
+            console.error('[P2P] Failed to create UDP socket:', e)
+        }
 
         setInterval(async () => {
+            // Get actual bound port, or fallback to default
+            const address = this.chatServer?.address()
+            // @ts-ignore
+            const currentPort = address ? address.port : CHAT_PORT
+
             const payload = {
                 app: 'Lost-Link',
                 username: this.selfDisplayName,
                 status: 'online',
-                chatPort: CHAT_PORT,
-                peerId: this.selfPeerId
+                chatPort: currentPort,
+                peerId: this.selfPeerId,
+                lobbyName: this.lobbyState.isHosting ? this.lobbyState.name : null,
+                isLobbyLocked: this.lobbyState.isLocked
             }
             const message = Buffer.from(JSON.stringify(payload))
-            this.udpSocket?.send(message, 0, message.length, BROADCAST_PORT, '255.255.255.255')
+
+            const broadcasts = this.getBroadcastAddresses()
+            for (const addr of broadcasts) {
+                try {
+                    this.udpSocket?.send(message, 0, message.length, BROADCAST_PORT, addr)
+                } catch (e) {
+                    // Ignore send errors for specific addresses
+                }
+            }
         }, BROADCAST_INTERVAL)
     }
 
     private startChatServer(): void {
-        this.chatServer = net.createServer((socket) => {
-            const remoteIp = socket.remoteAddress?.replace(/^::ffff:/, '') || ''
-            socket.setKeepAlive(true)
+        const tryListen = (port: number) => {
+            this.chatServer = net.createServer((socket) => {
+                const remoteIp = socket.remoteAddress?.replace(/^::ffff:/, '') || ''
+                socket.setKeepAlive(true)
 
-            this.setupSocketListeners(socket, remoteIp)
-        })
+                if (this.lobbyState.isHosting && this.lobbyState.isLocked) {
+                    // Reject connection if lobby is locked
+                    console.log(`[P2P] Rejected connection from ${remoteIp} (Lobby Locked)`)
+                    socket.destroy()
+                    return
+                }
 
-        this.chatServer.listen(CHAT_PORT, () => {
-            console.log(`Chat server listening on port ${CHAT_PORT}`)
-        })
+                this.setupSocketListeners(socket, remoteIp)
+            })
+
+            this.chatServer.on('error', (e: any) => {
+                if (e.code === 'EADDRINUSE') {
+                    console.log(`Port ${port} in use, trying ${port + 1}...`)
+                    tryListen(port + 1)
+                } else {
+                    console.error('[P2P] Server error:', e)
+                }
+            })
+
+            this.chatServer.listen(port, () => {
+                console.log(`Chat server listening on port ${port}`)
+            })
+        }
+
+        tryListen(CHAT_PORT)
     }
 
     private setupSocketListeners(socket: net.Socket, remoteIp: string): void {
@@ -155,15 +236,22 @@ export class P2PService {
 
                 // Derive AES key if they sent ECDH pub key
                 if (msg.ecdhPublicKeyB64 && this.ecdh) {
-                    const shared = this.ecdh.computeSecret(Buffer.from(msg.ecdhPublicKeyB64, 'base64'))
-                    peerInfo.aesKey = crypto.hkdfSync('sha256', shared, Buffer.from('lost-link'), Buffer.alloc(0), 32)
+                    try {
+                        const shared = this.ecdh.computeSecret(Buffer.from(msg.ecdhPublicKeyB64, 'base64'))
+                        const derived = crypto.hkdfSync('sha256', shared, Buffer.from('lost-link'), Buffer.alloc(0), 32)
+                        peerInfo.aesKey = Buffer.from(derived)
+                        console.log(`[P2P] Established AES-256-GCM session with ${remoteIp}`)
+                    } catch (err) {
+                        console.error('Key derivation failed:', err)
+                    }
                 }
 
                 this.peersByIp.set(remoteIp, peerInfo)
 
-                // Send back our handshake if we haven't already (simplified logic)
-                // In a real flow, we might need to track if we initiated or received
+                // Bi-directional handshake protocol
+                // If we received an initial handshake, we must respond with our keys to complete the ECDH exchange
                 if (!msg.isResponse) {
+                    console.log(`[P2P] Responding to handshake from ${remoteIp}`)
                     const resp = {
                         type: 'handshake',
                         isResponse: true,
@@ -173,12 +261,15 @@ export class P2PService {
                         peerId: this.selfPeerId
                     }
                     socket.write(JSON.stringify(resp) + '\n')
+                } else {
+                    console.log(`[P2P] Handshake completed with ${remoteIp}`)
                 }
 
+                // Notify frontend of successful secure connection
                 this.mainWindow?.webContents.send('udp-peer-connected', {
                     ip: remoteIp,
                     displayName: peerInfo.displayName,
-                    aes: !!peerInfo.aesKey
+                    aes: !!peerInfo.aesKey // This is critical for the UI "Secure" badge
                 })
             } else if (msg.type === 'msg') {
                 this.decryptAndForwardMessage(remoteIp, msg)
@@ -223,16 +314,44 @@ export class P2PService {
         }
     }
 
+    private resetSession(): void {
+        console.log('Resetting P2P session...')
+        // Close all active sockets
+        for (const [ip, peer] of this.peersByIp) {
+            if (peer.socket) {
+                peer.socket.end()
+                peer.socket.destroy()
+            }
+        }
+        this.peersByIp.clear()
+
+        // Rotate identity
+        this.selfPeerId = crypto.randomBytes(8).toString('hex')
+        this.selfDisplayName = 'User-' + this.selfPeerId.slice(0, 4)
+        this.initIdentity()
+    }
+
     private setupIpcHandlers(): void {
         ipcMain.handle('get-local-ip', () => this.getLocalIP())
+        ipcMain.handle('set-display-name', (_event, name: string) => {
+            this.selfDisplayName = name || 'User-' + this.selfPeerId.slice(0, 4)
+            return { ok: true, name: this.selfDisplayName }
+        })
 
-        ipcMain.handle('connect-peer', async (_event, { ip }) => {
+        ipcMain.handle('reset-session', () => {
+            this.resetSession()
+            return { ok: true }
+        })
+
+        ipcMain.handle('connect-peer', async (_event, { ip, port }) => {
             return new Promise((resolve, reject) => {
                 if (this.peersByIp.has(ip)) {
                     return resolve({ ok: true, ip, alreadyConnected: true })
                 }
 
-                const socket = net.connect({ host: ip, port: CHAT_PORT }, () => {
+                const targetPort = port || CHAT_PORT
+
+                const socket = net.connect({ host: ip, port: targetPort }, () => {
                     const handshake = {
                         type: 'handshake',
                         displayName: this.selfDisplayName,

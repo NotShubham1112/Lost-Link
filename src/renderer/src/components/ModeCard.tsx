@@ -25,11 +25,11 @@ export default function ModeCard({
         <div
             onClick={isComingSoon ? undefined : onClick}
             className={cn(
-                "relative group p-6 rounded-xl border transition-all duration-300",
-                "bg-card/50 hover:bg-card/80 backdrop-blur-sm",
+                "relative group p-6 rounded-xl border transition-all duration-500",
+                "bg-card/30 hover:bg-card/60 backdrop-blur-xl",
                 isComingSoon
-                    ? "border-border/50 opacity-60 cursor-not-allowed"
-                    : "border-border hover:border-border/80 cursor-pointer hover:shadow-lg hover:-translate-y-1",
+                    ? "border-border/20 opacity-40 cursor-not-allowed"
+                    : "border-border/40 hover:border-white/20 cursor-pointer hover:shadow-2xl hover:-translate-y-2 hover:bg-white/[0.02]",
                 className
             )}
         >

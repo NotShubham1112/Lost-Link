@@ -42,7 +42,8 @@
   }
 
   body {
-    @apply bg-black text-foreground font-sans antialiased;
+    @apply bg-background text-foreground antialiased selection:bg-white/10 selection:text-white;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }

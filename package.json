@@ -1,6 +1,6 @@
 {
   "name": "lost-link",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Offline LAN chat app (Lost-Link)",
   "private": true,
   "main": "out/main/index.js",

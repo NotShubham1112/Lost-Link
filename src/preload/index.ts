@@ -4,13 +4,32 @@ import { electronAPI } from '@electron-toolkit/preload'
 // Custom APIs for renderer
 const api = {
   getLocalIP: () => ipcRenderer.invoke('get-local-ip'),
-  connectPeer: (ip: string) => ipcRenderer.invoke('connect-peer', { ip }),
+  setDisplayName: (name: string) => ipcRenderer.invoke('set-display-name', name),
+  connectPeer: (ip: string, port?: number) => ipcRenderer.invoke('connect-peer', { ip, port }),
+  setLobbyState: (state: any) => ipcRenderer.invoke('set-lobby-state', state),
   sendPeerMessage: (toIp: string, text: string) => ipcRenderer.send('send-peer-message', { toIp, text }),
+  resetSession: () => ipcRenderer.invoke('reset-session'),
 
-  onUdpPeer: (callback) => ipcRenderer.on('udp-peer', (_event, value) => callback(value)),
-  onPeerConnected: (callback) => ipcRenderer.on('udp-peer-connected', (_event, value) => callback(value)),
-  onPeerMessage: (callback) => ipcRenderer.on('peer-message', (_event, value) => callback(value)),
-  onPeerDisconnected: (callback) => ipcRenderer.on('peer-disconnected', (_event, value) => callback(value))
+  onUdpPeer: (callback) => {
+    const subscription = (_event, value) => callback(value)
+    ipcRenderer.on('udp-peer', subscription)
+    return () => { ipcRenderer.removeListener('udp-peer', subscription) }
+  },
+  onPeerConnected: (callback) => {
+    const subscription = (_event, value) => callback(value)
+    ipcRenderer.on('udp-peer-connected', subscription)
+    return () => { ipcRenderer.removeListener('udp-peer-connected', subscription) }
+  },
+  onPeerMessage: (callback) => {
+    const subscription = (_event, value) => callback(value)
+    ipcRenderer.on('peer-message', subscription)
+    return () => { ipcRenderer.removeListener('peer-message', subscription) }
+  },
+  onPeerDisconnected: (callback) => {
+    const subscription = (_event, value) => callback(value)
+    ipcRenderer.on('peer-disconnected', subscription)
+    return () => { ipcRenderer.removeListener('peer-disconnected', subscription) }
+  }
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

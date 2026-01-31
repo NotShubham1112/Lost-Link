@@ -1,0 +1,30 @@
+LOST-LINK END USER LICENSE AGREEMENT
+
+IMPORTANT: PLEASE READ THIS LICENSE CAREFULLY BEFORE USING THIS SOFTWARE.
+
+1. LICENSE GRANT
+   "Lost-Link" (the "Software") is licensed, not sold. This license grants you a revocable, non-exclusive, non-transferable right to install and use the Software on devices you own or control.
+
+2. PRE-RELEASE SOFTWARE
+   This is beta/pre-release software. It may contain bugs, errors, or cause data loss. Use at your own risk.
+
+3. NETWORK USAGE
+   This Software requires access to your local network (LAN) to function.
+   By installing this Software, you agree to grant it permission to access your local network and communicate with other devices on the same network.
+   You acknowledge that you are responsible for the security of your own network.
+
+4. PRIVACY
+   This Software functions offline and does not send data to cloud servers. All communication is Peer-to-Peer (P2P) and encrypted.
+   However, metadata (like your IP address) is broadcasted to other users on your local network to facilitate discovery.
+
+5. RESTRICTIONS
+   You may not reverse engineer, decompile, or disassemble the Software.
+   You may not use the Software for illegal purposes.
+
+6. NO WARRANTY
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. THE AUTHORS DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED.
+
+7. LIMITATION OF LIABILITY
+   IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE THE SOFTWARE.
+
+By clicking "I Agree", you acknowledge that you have read this agreement, understand it, and agree to be bound by its terms.
