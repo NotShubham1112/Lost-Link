@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lost-Link</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <div class="header" style="display:flex; align-items:center; justify-content:space-between; height:64px; padding:0 16px; border-bottom:1px solid rgba(255,255,255,.08);">
+      <div class="brand" style="font-weight:700; font-size:20px; display:flex; align-items:center; gap:8px;">
+        <span style="width:28px; height:28px; border-radius:6px; background:#333; display:inline-block;"></span>
+        Lost-Link
+      </div>
+      <div class="gear" id="gear-btn" style="cursor:pointer; padding:6px 10px; border-radius:6px; background: rgba(255,255,255,.08);">⚙</div>
+    </div>
+    <div class="grid" id="grid-layout" style="display:grid; grid-template-columns:320px 1fr 420px; gap:16px; padding:16px; height: calc(100vh - 64px); box-sizing:border-box;">
+      <!-- Left: Nearby Users -->
+      <section class="pane" id="left-pane" aria-label="Nearby" style="display:flex; flex-direction:column;">
+        <div class="section-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <strong>Nearby Users</strong>
+          <span class="badge" id="status-badge">Scanning LAN</span>
+        </div>
+        <div id="peers-list" style="flex:1; overflow:auto; padding-right:6px;"></div>
+      </section>
+      <!-- Middle: Conversations (Coming Soon) -->
+      <section class="pane" id="middle-pane" aria-label="Conversations" style="display:flex; flex-direction:column;">
+        <div class="section-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <strong>Conversations</strong>
+          <span class="badge">Coming soon</span>
+        </div>
+        <div style="flex:1; display:flex; flex-direction:column; gap:8px; padding:6px;">
+          <div class="panel" style="padding:8px; border-radius:8px; background: rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08);">Group Chat (Public LAN) - coming soon</div>
+          <div class="panel" style="padding:8px; border-radius:8px; background: rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08);">Private Chats (End-to-End) - ready</div>
+        </div>
+      </section>
+      <!-- Right: Active Chat -->
+      <section class="pane" id="right-pane" aria-label="Active chat" style="display:flex; flex-direction:column;">
+        <div class="section-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <strong>Active Chat</strong>
+          <span class="badge" id="enc-badge" title="Encryption status">🔒 Encrypted</span>
+        </div>
+        <div id="chat-area" class="chat-area" style="flex:1; overflow:auto; border:1px solid rgba(255,255,255,.1); border-radius:6px; padding:8px;"></div>
+        <div class="chat-input" style="display:flex; gap:8px; padding:8px; border-top:1px solid rgba(255,255,255,.08);">
+          <input id="message-input" placeholder="Type a message" style="flex:1; padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,.25);"/>
+          <button id="send-btn" style="padding:8px 12px; border-radius:6px; background:#4a90e2; color:white; border:none;">Send</button>
+        </div>
+      </section>
+    </div>
+  </div>
+  <!-- Onboarding (centered) -->
+  <div id="onboard" style="display:none; position:fixed; inset:0; background: rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center;">
+    <div class="card" style="width:420px; padding:24px; border-radius:12px; background:#1a1a1a; border:1px solid rgba(255,255,255,.1); color:#fff;">
+      <h3 style="margin:0 0 12px;">Welcome to Lost-Link</h3>
+      <p style="margin:0 0 8px;">Set your display name to help others identify you on the LAN.</p>
+      <input id="display-name" placeholder="Display Name" style="width:100%; padding:10px; border-radius:6px; border:1px solid rgba(255,255,255,.3); background:#111; color:#fff;"/>
+      <div style="margin-top:12px; text-align:right;">
+        <button id="continue" style="padding:10px 14px; border-radius:6px; background:#4a90e2; color:white; border:none;">Continue</button>
+      </div>
+    </div>
+  </div>
+  <script src="renderer.js"></script>
+</body>
+</html>
